@@ -11,6 +11,7 @@
 #include <assert.h>
 
 int Gameplay::init () {
+	isShoot = 0;
 	std::srand (static_cast<unsigned int>(std::time (NULL)));
 	window.setFramerateLimit (60); // call it once, after creating the window
 	
@@ -39,7 +40,7 @@ int Gameplay::init () {
 	score.setCharacterSize (30);
 	score.setFillColor (sf::Color (239, 187, 56));
 
-	// Welcome background	
+	// Welcome background
 	bgTex.loadFromFile ("resources/bg.jpg");
 	sf::Vector2f sz ((float)window.getSize ().x, (float)window.getSize ().y);
 	shape.setSize (sz);
@@ -59,6 +60,16 @@ int Gameplay::init () {
 				if (gameState == -1)
 					return EXIT_SUCCESS;
 				break;
+			}
+
+			if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space)) {				
+				isShoot = 1;
+				lazers.push_back (Lazer ());
+				if (!lazers.empty () && shotClock.getElapsedTime().asSeconds() >= 0.25f) {
+					lazers.back ().rect.setRotation (ship.sprite.getRotation ());
+					lazers.back ().rect.setPosition (ship.sprite.getPosition ());
+				}
+				shotClock.restart ();
 			}
 			/*if (gameState == MODE1 && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) {
 				gameState = RESUME1;
@@ -96,7 +107,10 @@ void Gameplay::renderFrame () {
 
 	if (gameState == MODE1 || gameState == RESUME1) {
 		int i = 0;
-
+		for (std::vector<Lazer>::iterator it = lazers.begin (); it != lazers.end (); ++it) {
+			it->rect.move (sin (it->rect.getRotation () / 360 * 2 * pi) * it->velocity, -cos (it->rect.getRotation () / 360 * 2 * pi) * it->velocity);
+			window.draw (it->rect);
+		}
 	} else if (gameState == P1LOST) {
 		window.draw (lostText);
 	} else if (gameState == P1WIN) {
@@ -131,10 +145,12 @@ int Gameplay::selectMode (sf::RenderWindow& window) {
 				gameState = MODE1;
 				//level1 ();
 				window.clear ();
+				shotClock.restart ();
 				return gameState;
 			} else if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Num2) {
 				gameState = MODE2;
 				window.clear ();
+				shotClock.restart ();
 				return gameState;
 			}
 		}
@@ -155,7 +171,7 @@ int Gameplay::gameMode1 () {
 			ship.sprite.move (sin (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity, -cos (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity);
 		} else if (isUp == -1) {
 			ship.sprite.move (-sin (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity, cos (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity);
-		}		
+		}
 	} else if (ship.velocity < 0.f) {
 		ship.velocity = 0.f;
 		isUp = 0;
@@ -165,7 +181,7 @@ int Gameplay::gameMode1 () {
 	if (sf::Keyboard::isKeyPressed (sf::Keyboard::Up)) {
 		isUp = 1;
 		ship.velocity = ship.acceleration * deltaTime;
-		ship.sprite.move (sin (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity, -cos (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity);		
+		ship.sprite.move (sin (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity, -cos (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity);
 	}
 
 	if (sf::Keyboard::isKeyPressed (sf::Keyboard::Down)) {
@@ -182,9 +198,13 @@ int Gameplay::gameMode1 () {
 	if (sf::Keyboard::isKeyPressed (sf::Keyboard::Right)) {
 		ship.sprite.rotate (ship.angular_velocity * deltaTime);
 	}
-
-	if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space)) {
-		
+	
+	if (!lazers.empty () && (lazers.front ().rect.getPosition ().x < 0 ||
+		lazers.front ().rect.getPosition ().x > gameWidth ||
+		lazers.front ().rect.getPosition ().y < 0 ||
+		lazers.front ().rect.getPosition ().y > gameHeight)) {
+		lazers.erase(lazers.begin());
+		std::cout << "Succeed in erasing the laser!!!!!!!!!!!!!!!!!!" << std::endl;
 	}
 
 	return gameState;

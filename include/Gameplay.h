@@ -30,15 +30,18 @@ public:
 	const sf::Time AITime = sf::seconds (0.1f);
 	sf::Clock clock;
 	sf::Event event;
+	sf::Clock shotClock;
 
 	enum states { INTRO, MODE1, MODE2, RESUME1, RESUME2, P1WIN, P1LOST };
 	int gameState = INTRO;
 	int life = 3;
 	float deltaTime;
 	int isUp;
+	int isShoot;
 
 	Ship ship;
 	Lazer lazer;
+	std::vector<Lazer> lazers;
 
 	Gameplay () : window (sf::VideoMode (gameWidth, gameHeight, 32), "Asteroid") {
 

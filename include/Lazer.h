@@ -4,13 +4,12 @@
 
 class Lazer {
 public:
-	sf::Sprite sprite;
+	sf::RectangleShape rect;
 	sf::Texture lazer_texture;
+	float velocity;
 
-	Lazer () {
-		sprite.setPosition (sf::Vector2f (100.f, 100.f));
-		assert (lazer_texture.loadFromFile ("resources/lazer.png"));
-		sprite.setTexture (lazer_texture);
-		sprite.setScale (sf::Vector2f (0.05f, 0.05f)); // absolute scale factor
+	Lazer () : velocity (9.f) {
+		rect.setFillColor (sf::Color::Green);
+		rect.setSize (sf::Vector2f(2.f, 10.f));
 	}
 };
