@@ -2,8 +2,9 @@
 #include <SFML/Graphics.hpp>
 #include <assert.h>
 #include "Lazer.h"
+#include "GameObject.h"
 
-class Ship {
+class Ship : GameObject {
 public:
 	const float pi = 3.14159f;
 	float acceleration;
@@ -26,5 +27,30 @@ public:
 	}
 
 	Ship::~Ship () {
+	}
+
+	virtual void update (float dt) {
+
+	}
+
+	virtual void draw () {
+
+	}
+
+	virtual void checkCollisionWith (GameObject * obj) {
+		
+	}
+
+	virtual sf::Vector2f getCenter () {
+		return origin;
+	}
+
+	virtual int getRenderBucket () {
+		return 1;
+	}
+
+	bool CircleTest (sf::CircleShape Object1, sf::CircleShape Object2) {
+		sf::Vector2f Distance = Object1.getOrigin () - Object2.getOrigin ();
+		return (Distance.x * Distance.x + Distance.y * Distance.y <= (Object1.getRadius () + Object2.getRadius ()) * (Object1.getRadius () + Object2.getRadius ()));
 	}
 };

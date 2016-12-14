@@ -13,14 +13,13 @@ private:
 	const float pi = 3.14159f;
 	const int gameWidth = 800;
 	const int gameHeight = 600;
-
 public:
-	std::vector<GameObject*> objects;
 	const float BUCKET_WIDTH = 100;
 	const float BUCKET_HEIGHT = 100;
-	const int COLUMNS = 10;
-	const int ROWS = 10;
-	std::vector<GameObject*> grid[10][10];
+	static const int COLUMNS = 10;
+	static const int ROWS = 10;
+	std::vector<GameObject*> objects;
+	std::vector<GameObject*> grid[COLUMNS][ROWS];
 
 	Lazer lazer;
 	std::vector<Lazer> lazers;
@@ -58,7 +57,7 @@ public:
 	float astTime;
 
 	Gameplay () : window (sf::VideoMode (gameWidth, gameHeight, 32), "Asteroid") {
-
+		
 	}
 	int init ();
 	int selectMode (sf::RenderWindow& window);
@@ -66,4 +65,8 @@ public:
 	void renderFrame (); // Draw game objects
 	void astSpawn (); // Spawn Asteroids
 	bool CircleTest (sf::CircleShape Object1, sf::CircleShape Object2); // Cheeck collisions for colliders
+	sf::Vector2i getBucket (sf::Vector2f pos);
+	void bucket_add (sf::Vector2i b, GameObject* obj);
+	void bucket_remove (sf::Vector2i b, GameObject* obj);
+	void detect_collisions (GameObject* obj, sf::Vector2i b);
 };

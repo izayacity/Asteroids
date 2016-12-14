@@ -10,6 +10,7 @@
 #include <vector>
 #include <assert.h>
 
+
 int Gameplay::init () {
 	std::srand (static_cast<unsigned int>(std::time (NULL)));
 	window.setFramerateLimit (60); // call it once, after creating the window
@@ -155,7 +156,7 @@ int Gameplay::selectMode (sf::RenderWindow& window) {
 	}
 }
 
-void Gameplay::update_state () {
+void Gameplay::update_state () {	
 	astTime = astClock.getElapsedTime().asSeconds();
 	if (astTime >= 1 && asteroids.size() <= 10) {
 		astSpawn ();
@@ -208,6 +209,65 @@ void Gameplay::update_state () {
 		asteroids.front ().sprite.getPosition ().y < 0 ||
 		asteroids.front ().sprite.getPosition ().y > gameHeight)) {
 		asteroids.erase (asteroids.begin ());
+	}
+
+	// Bucket Grid
+	for (int i = 0; i < objects.size (); ++i) {
+		GameObject* obj = objects[i];
+		sf::Vector2i curBucket = getBucket (obj->getCenter ());
+		obj->update (deltaTime);    // Move obj, but don't check for collisions
+		sf::Vector2i newBucket = getBucket (obj->getCenter ());
+		if (curBucket != newBucket) {
+			bucket_remove (curBucket, obj);
+			bucket_add (newBucket, obj);
+		}
+		detect_collisions (obj, newBucket);
+	}
+}
+
+// Calculate the current bucket before updating obj
+sf::Vector2i Gameplay::getBucket (sf::Vector2f pos) {
+	int col = int (pos.x / BUCKET_WIDTH);
+	if (col < 0)
+		col = 0;
+	else if (col >= COLUMNS)
+		col = COLUMNS - 1;
+	int row = int (pos.y / BUCKET_HEIGHT);
+	if (row < 0)
+		row = 0;
+	else if (row >= ROWS)
+		row = ROWS - 1;
+	return sf::Vector2i (col, row);
+}
+
+// Add obj to the new bucket
+void Gameplay::bucket_add (sf::Vector2i b, GameObject* obj) {
+	std::vector<GameObject*> & v = grid[b.x][b.y];
+	v.push_back (obj);
+	objects.push_back (obj);
+}
+
+// If bucket has changed, remove obj from the current bucket
+void Gameplay::bucket_remove (sf::Vector2i b, GameObject* obj) {
+	std::vector<GameObject*> & v = grid[b.x][b.y];
+	v.erase (remove (v.begin (), v.end (), obj));
+	objects.erase (remove (objects.begin (), objects.end (), obj));
+}
+
+// Detect collisions against objects in the new bucket
+void Gameplay::detect_collisions (GameObject* obj, sf::Vector2i b) {
+	int left = std::max (b.x - 1, 0);
+	int right = std::min (b.x + 1, COLUMNS - 1);
+	int top = std::max (b.y - 1, 0);
+	int bot = std::min (b.y + 1, ROWS - 1);
+	for (int bx = left; bx <= right; ++bx) {
+		for (int by = top; by <= bot; ++by) {
+			std::vector<GameObject*> & v = grid[b.x][b.y];
+			for (GameObject* o : v) {
+				if (o != obj)
+					obj->checkCollisionWith (o);
+			}
+		}
 	}
 }
 
