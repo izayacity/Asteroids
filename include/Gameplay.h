@@ -6,6 +6,7 @@
 #include "../include/Ship.h"
 #include "../include/Lazer.h"
 #include "../include/Asteroid.h"
+#include "../include/GameObject.h"
 
 class Gameplay {
 private:
@@ -14,6 +15,13 @@ private:
 	const int gameHeight = 600;
 
 public:
+	std::vector<GameObject*> objects;
+	const float BUCKET_WIDTH = 100;
+	const float BUCKET_HEIGHT = 100;
+	const int COLUMNS = 10;
+	const int ROWS = 10;
+	std::vector<GameObject*> grid[10][10];
+
 	Lazer lazer;
 	std::vector<Lazer> lazers;
 	std::vector<Asteroid> asteroids;
@@ -42,7 +50,7 @@ public:
 	sf::Clock shotClock;
 	sf::Clock astClock;
 
-	enum states { INTRO, MODE1, MODE2, RESUME1, RESUME2, P1WIN, P1LOST };
+	enum states { INTRO, MODE1, P1LOST };
 	int gameState = INTRO;
 	int life = 3;
 	int isUp;
@@ -53,16 +61,9 @@ public:
 
 	}
 	int init ();
-	void restart ();
-	void updateScore ();
-	void updateLife ();
 	int selectMode (sf::RenderWindow& window);
-	int gameMode1 ();
-	void gameMode2 ();
-	void level1 ();
-	void level2 ();
+	void update_state ();
 	void renderFrame (); // Draw game objects
-	int isWin ();
 	void astSpawn (); // Spawn Asteroids
-	bool CircleTest (sf::CircleShape Object1, sf::CircleShape Object2);
+	bool CircleTest (sf::CircleShape Object1, sf::CircleShape Object2); // Cheeck collisions for colliders
 };

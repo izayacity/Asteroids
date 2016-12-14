@@ -53,7 +53,6 @@ int Gameplay::init () {
 
 	// Select game mode
 	gameState = selectMode (window);
-	//restart ();
 
 	// Game loop window
 	while (window.isOpen ()) {
@@ -75,15 +74,12 @@ int Gameplay::init () {
 				}
 				shotClock.restart ();
 			}
-			/*if (gameState == MODE1 && event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space) {
-				gameState = RESUME1;
-			}*/
 		}
 
 		deltaTime = clock.restart ().asSeconds ();
 
 		if (gameState == MODE1) {
-			gameMode1 ();
+			update_state ();
 		}
 
 		renderFrame ();
@@ -94,11 +90,6 @@ int Gameplay::init () {
 }
 
 void Gameplay::renderFrame () {
-	// Win text
-	sf::Text wonText ("You won!\nPress esc to menu.", fontHNM, 40);
-	wonText.setPosition (gameWidth / 2 - wonText.getGlobalBounds ().width / 2, gameHeight / 2 - wonText.getGlobalBounds ().height / 2);
-	wonText.setFillColor (sf::Color::White);
-
 	// Lost text
 	sf::Text lostText ("You lost!\nPress esc to menu.", fontHNM, 40);
 	lostText.setPosition (gameWidth / 2 - lostText.getGlobalBounds ().width / 2, gameHeight / 2 - lostText.getGlobalBounds ().height / 2);
@@ -109,7 +100,7 @@ void Gameplay::renderFrame () {
 	window.draw (lifeText);
 	window.draw (ship.sprite);
 
-	if (gameState == MODE1 || gameState == RESUME1) {
+	if (gameState == MODE1) {
 		int i = 0;
 		for (std::vector<Lazer>::iterator it = lazers.begin (); it != lazers.end (); ++it) {
 			it->rect.move (sin (it->rect.getRotation () / 360 * 2 * pi) * it->velocity, -cos (it->rect.getRotation () / 360 * 2 * pi) * it->velocity);
@@ -121,8 +112,6 @@ void Gameplay::renderFrame () {
 		}
 	} else if (gameState == P1LOST) {
 		window.draw (lostText);
-	} else if (gameState == P1WIN) {
-		window.draw (wonText);
 	}
 }
 
@@ -130,9 +119,9 @@ int Gameplay::selectMode (sf::RenderWindow& window) {
 	life = 3;
 
 	// Welcome text
-	sf::Text welcome[5];
-	std::string msg[5] = { "Press 1 - You VS Ai", "2 - You + Friend VS 2 Ai" , "Player1 uses WSAD", "Player2 uses Arrow Keys.", "Press Esc to exit." };
-	for (int i = 0; i < 5; i++) {
+	sf::Text welcome[2];
+	std::string msg[2] = { "Press 1 - You VS Ai", "Press Esc to exit." };
+	for (int i = 0; i < 2; i++) {
 		welcome[i].setPosition (50.0f, 50.0f * (i + 1));
 		welcome[i].setFillColor (sf::Color (239, 187, 56));
 		welcome[i].setCharacterSize (30);
@@ -155,24 +144,18 @@ int Gameplay::selectMode (sf::RenderWindow& window) {
 				window.clear ();
 				shotClock.restart ();
 				return gameState;
-			} else if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Num2) {
-				gameState = MODE2;
-				window.clear ();
-				shotClock.restart ();
-				return gameState;
 			}
 		}
 		window.clear ();
-		// Put text and wait for select
 		window.draw (shape);
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 2; i++)
 			window.draw (welcome[i]);
 
 		window.display ();
 	}
 }
 
-int Gameplay::gameMode1 () {
+void Gameplay::update_state () {
 	astTime = astClock.getElapsedTime().asSeconds();
 	if (astTime >= 1 && asteroids.size() <= 10) {
 		astSpawn ();
@@ -226,8 +209,6 @@ int Gameplay::gameMode1 () {
 		asteroids.front ().sprite.getPosition ().y > gameHeight)) {
 		asteroids.erase (asteroids.begin ());
 	}
-
-	return gameState;
 }
 
 void Gameplay::astSpawn () {

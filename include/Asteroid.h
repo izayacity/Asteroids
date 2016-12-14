@@ -11,7 +11,7 @@ public:
 	float velocity;
 	int type;
 
-	Asteroid () : velocity (5.f) {
+	Asteroid () : velocity (2.f) {
 	}
 	
 	void small (sf::Texture *astTexture) {
