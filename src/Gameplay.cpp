@@ -119,9 +119,9 @@ int Gameplay::selectMode (sf::RenderWindow& window) {
 	life = 3;
 
 	// Welcome text
-	sf::Text welcome[2];
-	std::string msg[2] = { "Press 1 - You VS Ai", "Press Esc to exit." };
-	for (int i = 0; i < 2; i++) {
+	sf::Text welcome[3];
+	std::string msg[3] = { "Press 1 - You VS Ai", "Space to shoot, Arrow keys to control", "Press Esc to exit." };
+	for (int i = 0; i < 3; i++) {
 		welcome[i].setPosition (50.0f, 50.0f * (i + 1));
 		welcome[i].setFillColor (sf::Color (239, 187, 56));
 		welcome[i].setCharacterSize (30);
@@ -148,7 +148,7 @@ int Gameplay::selectMode (sf::RenderWindow& window) {
 		}
 		window.clear ();
 		window.draw (shape);
-		for (int i = 0; i < 2; i++)
+		for (int i = 0; i < 3; i++)
 			window.draw (welcome[i]);
 
 		window.display ();
