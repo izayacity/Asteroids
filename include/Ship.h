@@ -19,6 +19,8 @@ public:
 		sprite.setTexture (shipTexture1);
 		sprite.setScale (sf::Vector2f (0.05f, 0.05f)); // absolute scale factor
 		sprite.setOrigin (sprite.getTexture ()->getSize ().x * 1.f / 2, 0.f);
+		/*collider.setOrigin (sprite.getOrigin ());
+		collider.setRadius ((sprite.getTexture ()->getSize ().x * 1.f + sprite.getTexture ()->getSize ().y * 1.f) / 2);*/
 	}
 
 	Ship::~Ship () {

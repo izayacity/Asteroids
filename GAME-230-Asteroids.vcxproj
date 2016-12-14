@@ -156,6 +156,7 @@
     <ClCompile Include="src\Gameplay.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Asteroid.h" />
     <ClInclude Include="include\Gameplay.h" />
     <ClInclude Include="include\Lazer.h" />
     <ClInclude Include="include\Ship.h" />

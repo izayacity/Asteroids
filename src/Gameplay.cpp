@@ -11,7 +11,6 @@
 #include <assert.h>
 
 int Gameplay::init () {
-	isShoot = 0;
 	std::srand (static_cast<unsigned int>(std::time (NULL)));
 	window.setFramerateLimit (60); // call it once, after creating the window
 	
@@ -45,6 +44,12 @@ int Gameplay::init () {
 	sf::Vector2f sz ((float)window.getSize ().x, (float)window.getSize ().y);
 	shape.setSize (sz);
 	shape.setTexture (&bgTex);
+	assert (largeTexture.loadFromFile ("resources/large.png"));
+	largeTexture.setSmooth (true);
+	assert (mediumTexture.loadFromFile ("resources/medium.png"));
+	mediumTexture.setSmooth (true);
+	assert (smallTexture.loadFromFile ("resources/small.png"));
+	smallTexture.setSmooth (true);
 
 	// Select game mode
 	gameState = selectMode (window);
@@ -63,7 +68,6 @@ int Gameplay::init () {
 			}
 
 			if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space)) {				
-				isShoot = 1;
 				lazers.push_back (Lazer ());
 				if (!lazers.empty () && shotClock.getElapsedTime().asSeconds() >= 0.25f) {
 					lazers.back ().rect.setRotation (ship.sprite.getRotation ());
@@ -110,6 +114,10 @@ void Gameplay::renderFrame () {
 		for (std::vector<Lazer>::iterator it = lazers.begin (); it != lazers.end (); ++it) {
 			it->rect.move (sin (it->rect.getRotation () / 360 * 2 * pi) * it->velocity, -cos (it->rect.getRotation () / 360 * 2 * pi) * it->velocity);
 			window.draw (it->rect);
+		}
+		for (std::vector<Asteroid>::iterator it = asteroids.begin (); it != asteroids.end (); ++it) {
+			it->sprite.move (sin (it->sprite.getRotation () / 360 * 2 * pi) * it->velocity, -cos (it->sprite.getRotation () / 360 * 2 * pi) * it->velocity);
+			window.draw (it->sprite);
 		}
 	} else if (gameState == P1LOST) {
 		window.draw (lostText);
@@ -165,6 +173,12 @@ int Gameplay::selectMode (sf::RenderWindow& window) {
 }
 
 int Gameplay::gameMode1 () {
+	astTime = astClock.getElapsedTime().asSeconds();
+	if (astTime >= 1 && asteroids.size() <= 10) {
+		astSpawn ();
+		astClock.restart ();
+	}
+
 	if (ship.velocity > 0.f) {
 		ship.velocity -= deltaTime;
 		if (isUp == 1) {
@@ -204,8 +218,71 @@ int Gameplay::gameMode1 () {
 		lazers.front ().rect.getPosition ().y < 0 ||
 		lazers.front ().rect.getPosition ().y > gameHeight)) {
 		lazers.erase(lazers.begin());
-		std::cout << "Succeed in erasing the laser!!!!!!!!!!!!!!!!!!" << std::endl;
+	}
+
+	if (!asteroids.empty () && (asteroids.front ().sprite.getPosition ().x < 0 ||
+		asteroids.front ().sprite.getPosition ().x > gameWidth ||
+		asteroids.front ().sprite.getPosition ().y < 0 ||
+		asteroids.front ().sprite.getPosition ().y > gameHeight)) {
+		asteroids.erase (asteroids.begin ());
 	}
 
 	return gameState;
+}
+
+void Gameplay::astSpawn () {
+	float pos_x, pos_y, angle;
+	int type = rand () % 3;
+
+	angle = rand () % 360 + 0.f;
+	if (angle >= 0 && angle < 45) {
+		pos_x = rand () % (gameWidth / 2) + 0.f;
+		pos_y = gameHeight + 0.f;
+		angle = atan ((gameWidth / 2 - pos_x) / (gameHeight / 2)) / pi * 180.f;
+	} else if (angle >= 45 && angle < 90) {
+		pos_x = 0.f;
+		pos_y = rand () % (gameHeight / 2) + gameHeight / 2.f;
+		angle = atan ((gameWidth / 2) / (pos_y - gameHeight / 2)) / pi * 180.f;
+	} else if (angle >= 90 && angle < 135) {
+		pos_x = 0.f;
+		pos_y = rand () % (gameHeight / 2) + 0.f;
+		angle = 180.f - atan ((gameWidth / 2) / (gameHeight / 2 - pos_y)) / pi * 180.f;
+	} else if (angle >= 135 && angle < 180) {
+		pos_x = rand () % (gameWidth / 2) + 0.f;
+		pos_y = 0.f;
+		angle = 180.f - atan ((gameWidth / 2 - pos_x) / (gameHeight / 2)) / pi * 180.f;
+	} else if (angle >= 180 && angle < 225) {
+		pos_x = rand () % (gameWidth / 2) + gameWidth / 2.f;
+		pos_y = 0.f;
+		angle = atan ((pos_x - gameWidth / 2) / (gameHeight / 2)) / pi * 180.f + 180.f;
+	} else if (angle >= 225 && angle < 270) {
+		pos_x = gameWidth + 0.f;
+		pos_y = rand () % (gameHeight / 2) + 0.f;
+		angle = atan ((gameWidth / 2) / (gameHeight / 2 - pos_y)) / pi * 180.f + 180.f;
+	} else if (angle >= 270 && angle < 315) {
+		pos_x = gameWidth + 0.f;
+		pos_y = rand () % (gameHeight / 2) + gameHeight / 2.f;
+		angle = 360.f - atan ((gameWidth / 2) / (pos_y - gameHeight / 2)) / pi * 180.f;
+	} else if (angle >= 315 && angle < 360) {
+		pos_x = rand () % (gameWidth / 2) + gameWidth / 2.f;
+		pos_y = gameHeight + 0.f;
+		angle = 360.f - atan ((pos_x - gameWidth / 2) / (gameHeight / 2)) / pi * 180.f;
+	}
+
+	asteroids.push_back (Asteroid());
+
+	if (type == 0) {
+		asteroids.back ().small (&smallTexture);
+	} else if (type == 1) {
+		asteroids.back ().medium (&mediumTexture);
+	} else if (type == 2) {
+		asteroids.back ().large (&largeTexture);
+	}
+	asteroids.back ().sprite.setRotation (angle);
+	asteroids.back ().sprite.setPosition (pos_x, pos_y);
+}
+
+bool Gameplay::CircleTest (sf::CircleShape Object1, sf::CircleShape Object2) {
+	sf::Vector2f Distance = Object1.getOrigin () - Object2.getOrigin ();
+	return (Distance.x * Distance.x + Distance.y * Distance.y <= (Object1.getRadius() + Object2.getRadius ()) * (Object1.getRadius () + Object2.getRadius ()));
 }

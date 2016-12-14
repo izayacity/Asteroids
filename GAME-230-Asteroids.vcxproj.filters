@@ -32,5 +32,8 @@
     <ClInclude Include="include\Lazer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Asteroid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
