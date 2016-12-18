@@ -10,11 +10,12 @@
 #include <vector>
 #include <assert.h>
 
-
 int Gameplay::init () {
+	// Time seed init
 	std::srand (static_cast<unsigned int>(std::time (NULL)));
 	window.setFramerateLimit (60); // call it once, after creating the window
 	
+	// Sounds buffer
 	assert (thrust_sound_buffer.loadFromFile ("resources/thrust.wav"));
 	thrust_sound.setBuffer (thrust_sound_buffer);
 
@@ -67,11 +68,20 @@ int Gameplay::init () {
 				break;
 			}
 
-			if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space)) {				
-				lazers.push_back (Lazer ());
-				if (!lazers.empty () && shotClock.getElapsedTime().asSeconds() >= 0.25f) {
-					lazers.back ().rect.setRotation (ship.sprite.getRotation ());
-					lazers.back ().rect.setPosition (ship.sprite.getPosition ());
+			if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space) && count_objects ("lazer") <= 10) {
+				//lazers.push_back (Lazer ());
+
+				std::shared_ptr<Lazer> lz_ptr (new Lazer());
+				objects.push_back (lz_ptr);
+
+				if (lz_ptr == nullptr) {
+					std::cout << "Failed to make lz_ptr" << std::endl;
+					return EXIT_FAILURE;
+				}
+
+				if (shotClock.getElapsedTime().asSeconds() >= 0.25f) {
+					lz_ptr->rect.setRotation (ship.sprite.getRotation ());
+					lz_ptr->rect.setPosition (ship.sprite.getPosition ());
 				}
 				shotClock.restart ();
 			}
@@ -103,14 +113,28 @@ void Gameplay::renderFrame () {
 
 	if (gameState == MODE1) {
 		int i = 0;
-		for (std::vector<Lazer>::iterator it = lazers.begin (); it != lazers.end (); ++it) {
-			it->rect.move (sin (it->rect.getRotation () / 360 * 2 * pi) * it->velocity, -cos (it->rect.getRotation () / 360 * 2 * pi) * it->velocity);
-			window.draw (it->rect);
+		// Todo
+		//for (std::vector<Lazer>::iterator it = lazers.begin (); it != lazers.end (); ++it) {
+		//	it->rect.move (sin (it->rect.getRotation () / 360 * 2 * pi) * it->velocity, -cos (it->rect.getRotation () / 360 * 2 * pi) * it->velocity);
+		//	window.draw (it->rect);
+		//}
+		//for (std::vector<Asteroid>::iterator it = asteroids.begin (); it != asteroids.end (); ++it) {
+		//	it->sprite.move (sin (it->sprite.getRotation () / 360 * 2 * pi) * it->velocity, -cos (it->sprite.getRotation () / 360 * 2 * pi) * it->velocity);
+		//	window.draw (it->sprite);
+		//}
+
+		for (std::vector<std::shared_ptr<GameObject>>::iterator it = objects.begin (); it != objects.end (); ) {
+			if (((*it)->getCenter ().x < 0 ||
+				(*it)->getCenter ().x > gameWidth || (*it)->getCenter ().y < 0 || (*it)->getCenter ().y > gameHeight)) {
+				std::cout << "Out of bound" << std::endl;
+				it = objects.erase (it);
+				continue;
+			} else {
+				(*it)->draw (window);
+				++it;
+			}
 		}
-		for (std::vector<Asteroid>::iterator it = asteroids.begin (); it != asteroids.end (); ++it) {
-			it->sprite.move (sin (it->sprite.getRotation () / 360 * 2 * pi) * it->velocity, -cos (it->sprite.getRotation () / 360 * 2 * pi) * it->velocity);
-			window.draw (it->sprite);
-		}
+
 	} else if (gameState == P1LOST) {
 		window.draw (lostText);
 	}
@@ -141,7 +165,6 @@ int Gameplay::selectMode (sf::RenderWindow& window) {
 
 			if (event.type == sf::Event::KeyReleased && event.key.code == sf::Keyboard::Num1) {
 				gameState = MODE1;
-				//level1 ();
 				window.clear ();
 				shotClock.restart ();
 				return gameState;
@@ -156,9 +179,20 @@ int Gameplay::selectMode (sf::RenderWindow& window) {
 	}
 }
 
-void Gameplay::update_state () {	
+// Return the number of objects with certain game object type
+int Gameplay::count_objects (std::string type) {
+	int count = 0;
+	for (std::vector<std::shared_ptr<GameObject>>::iterator it = objects.begin (); it != objects.end (); ++it) {
+		if ((*it)->getTag() == type) {
+			count++;
+		}
+	}
+	return count;
+}
+
+void Gameplay::update_state () {
 	astTime = astClock.getElapsedTime().asSeconds();
-	if (astTime >= 1 && asteroids.size() <= 10) {
+	if (astTime >= 1) {
 		astSpawn ();
 		astClock.restart ();
 	}
@@ -197,31 +231,33 @@ void Gameplay::update_state () {
 		ship.sprite.rotate (ship.angular_velocity * deltaTime);
 	}
 	
-	if (!lazers.empty () && (lazers.front ().rect.getPosition ().x < 0 ||
-		lazers.front ().rect.getPosition ().x > gameWidth ||
-		lazers.front ().rect.getPosition ().y < 0 ||
-		lazers.front ().rect.getPosition ().y > gameHeight)) {
-		lazers.erase(lazers.begin());
-	}
+	//// Erase lasers when they fly out of the screen
+	//if (!lazers.empty () && (lazers.front ().rect.getPosition ().x < 0 ||
+	//	lazers.front ().rect.getPosition ().x > gameWidth ||
+	//	lazers.front ().rect.getPosition ().y < 0 ||
+	//	lazers.front ().rect.getPosition ().y > gameHeight)) {
+	//	lazers.erase(lazers.begin());
+	//}
 
-	if (!asteroids.empty () && (asteroids.front ().sprite.getPosition ().x < 0 ||
-		asteroids.front ().sprite.getPosition ().x > gameWidth ||
-		asteroids.front ().sprite.getPosition ().y < 0 ||
-		asteroids.front ().sprite.getPosition ().y > gameHeight)) {
-		asteroids.erase (asteroids.begin ());
-	}
+	//// Erase asteroids when they fly out of the screen
+	//if (!asteroids.empty () && (asteroids.front ().sprite.getPosition ().x < 0 ||
+	//	asteroids.front ().sprite.getPosition ().x > gameWidth ||
+	//	asteroids.front ().sprite.getPosition ().y < 0 ||
+	//	asteroids.front ().sprite.getPosition ().y > gameHeight)) {
+	//	asteroids.erase (asteroids.begin ());
+	//}
 
 	// Bucket Grid
 	for (int i = 0; i < objects.size (); ++i) {
-		GameObject* obj = objects[i];
+		std::shared_ptr<GameObject> obj = objects[i];
 		sf::Vector2i curBucket = getBucket (obj->getCenter ());
-		obj->update (deltaTime);    // Move obj, but don't check for collisions
+		obj->update ();    // Move obj, but don't check for collisions
 		sf::Vector2i newBucket = getBucket (obj->getCenter ());
-		if (curBucket != newBucket) {
+		/*if (curBucket != newBucket) {
 			bucket_remove (curBucket, obj);
 			bucket_add (newBucket, obj);
 		}
-		detect_collisions (obj, newBucket);
+		detect_collisions (obj, newBucket);*/
 	}
 }
 
@@ -241,29 +277,35 @@ sf::Vector2i Gameplay::getBucket (sf::Vector2f pos) {
 }
 
 // Add obj to the new bucket
-void Gameplay::bucket_add (sf::Vector2i b, GameObject* obj) {
-	std::vector<GameObject*> & v = grid[b.x][b.y];
+void Gameplay::bucket_add (sf::Vector2i b, std::shared_ptr<GameObject> obj) {
+	std::vector<std::shared_ptr<GameObject>> & v = grid[b.x][b.y];
 	v.push_back (obj);
-	objects.push_back (obj);
 }
 
 // If bucket has changed, remove obj from the current bucket
-void Gameplay::bucket_remove (sf::Vector2i b, GameObject* obj) {
-	std::vector<GameObject*> & v = grid[b.x][b.y];
-	v.erase (remove (v.begin (), v.end (), obj));
-	objects.erase (remove (objects.begin (), objects.end (), obj));
+void Gameplay::bucket_remove (sf::Vector2i b, std::shared_ptr<GameObject> obj) {
+	std::vector<std::shared_ptr<GameObject>> & v = grid[b.x][b.y];
+	auto i = std::find (v.begin (), v.end (), obj);
+	if (i != v.end ()) {
+		std::cout << "Successfully delete object i" << std::endl;
+		v.erase (i);
+	} else {
+		std::cout << "Could not find the object in bucket_move" << std::endl;
+	}
 }
 
 // Detect collisions against objects in the new bucket
-void Gameplay::detect_collisions (GameObject* obj, sf::Vector2i b) {
+void Gameplay::detect_collisions (std::shared_ptr<GameObject> obj, sf::Vector2i b) {
 	int left = std::max (b.x - 1, 0);
 	int right = std::min (b.x + 1, COLUMNS - 1);
 	int top = std::max (b.y - 1, 0);
 	int bot = std::min (b.y + 1, ROWS - 1);
+
+	// Check the collisions between 4 buckets around
 	for (int bx = left; bx <= right; ++bx) {
 		for (int by = top; by <= bot; ++by) {
-			std::vector<GameObject*> & v = grid[b.x][b.y];
-			for (GameObject* o : v) {
+			std::vector<std::shared_ptr<GameObject>> & v = grid[bx][by];
+			for (std::shared_ptr<GameObject> o : v) {
 				if (o != obj)
 					obj->checkCollisionWith (o);
 			}
@@ -310,17 +352,27 @@ void Gameplay::astSpawn () {
 		angle = 360.f - atan ((pos_x - gameWidth / 2) / (gameHeight / 2)) / pi * 180.f;
 	}
 
-	asteroids.push_back (Asteroid());
-
-	if (type == 0) {
-		asteroids.back ().small (&smallTexture);
-	} else if (type == 1) {
-		asteroids.back ().medium (&mediumTexture);
-	} else if (type == 2) {
-		asteroids.back ().large (&largeTexture);
+	// asteroids.push_back (Asteroid());
+	// Push the asteroids into vector objects
+	std::shared_ptr<Asteroid> ast_ptr (new Asteroid ());
+	if (ast_ptr == nullptr) {
+		std::cout << "Failed to make ast_ptr" << std::endl;
+		return;
 	}
-	asteroids.back ().sprite.setRotation (angle);
-	asteroids.back ().sprite.setPosition (pos_x, pos_y);
+	objects.push_back (ast_ptr);
+
+	// Init the new asteroid based on the random value of type
+	if (type == 0) {
+		ast_ptr->small (&smallTexture);
+	} else if (type == 1) {
+		ast_ptr->medium (&mediumTexture);
+	} else if (type == 2) {
+		ast_ptr->large (&largeTexture);
+	}
+
+	// Set the position and rotation of the new asteroid
+	ast_ptr->sprite.setRotation (angle);
+	ast_ptr->sprite.setPosition (pos_x, pos_y);
 }
 
 bool Gameplay::CircleTest (sf::CircleShape Object1, sf::CircleShape Object2) {

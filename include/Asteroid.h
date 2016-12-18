@@ -1,18 +1,20 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <memory>
+#include <string>
 #include <assert.h>
 #include "GameObject.h"
 
-class Asteroid : GameObject {
+class Asteroid : public GameObject {
 public:	
 	sf::Sprite sprite;
 	sf::CircleShape collider;
 	sf::Vector2f origin;
-
 	float velocity;
 	int type;
+	const float pi = 3.14159f;
 
-	Asteroid () : velocity (2.f) {
+	Asteroid () : velocity (2.25f) {
 	
 	}
 	
@@ -46,24 +48,28 @@ public:
 		collider.setRadius ((sprite.getTexture ()->getSize ().x * 1.f + sprite.getTexture ()->getSize ().y * 1.f) / 2);
 	}
 
-	virtual void update (float dt) {
-
+	virtual void update () {
+		sprite.move (sin (sprite.getRotation () / 360 * 2 * pi) * velocity, -cos (sprite.getRotation () / 360 * 2 * pi) * velocity);
 	}
 
-	virtual void draw () {
-
+	virtual void draw (sf::RenderWindow &window) {
+		window.draw (sprite);
 	}
 
-	virtual void checkCollisionWith (GameObject * obj) {
+	virtual void checkCollisionWith (std::shared_ptr<GameObject> obj) {
 
 	}
 
 	virtual sf::Vector2f getCenter () {
-		return origin;
+		return sprite.getPosition ();
 	}
 
 	virtual int getRenderBucket () {
 		return 0;
+	}
+
+	virtual std::string getTag () {
+		return "asteroid";
 	}
 
 	bool CircleTest (sf::CircleShape Object1, sf::CircleShape Object2) {

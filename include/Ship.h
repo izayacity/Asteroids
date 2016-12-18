@@ -1,10 +1,12 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <memory>
+#include <string>
 #include <assert.h>
 #include "Lazer.h"
 #include "GameObject.h"
 
-class Ship : GameObject {
+class Ship : public GameObject {
 public:
 	const float pi = 3.14159f;
 	float acceleration;
@@ -29,24 +31,28 @@ public:
 	Ship::~Ship () {
 	}
 
-	virtual void update (float dt) {
-
+	virtual void update () {
+		sprite.move (sin (sprite.getRotation () / 360 * 2 * pi) * velocity, -cos (sprite.getRotation () / 360 * 2 * pi) * velocity);
 	}
 
-	virtual void draw () {
-
+	virtual void draw (sf::RenderWindow &window) {
+		window.draw (sprite);
 	}
 
-	virtual void checkCollisionWith (GameObject * obj) {
+	virtual void checkCollisionWith (std::shared_ptr<GameObject> obj) {
 		
 	}
 
 	virtual sf::Vector2f getCenter () {
-		return origin;
+		return sprite.getPosition();
 	}
 
 	virtual int getRenderBucket () {
 		return 1;
+	}
+
+	virtual std::string getTag () {
+		return "ship";
 	}
 
 	bool CircleTest (sf::CircleShape Object1, sf::CircleShape Object2) {
