@@ -20,14 +20,9 @@ public:
 	const float BUCKET_HEIGHT = 100;
 	static const int COLUMNS = 10;
 	static const int ROWS = 10;	
-	/*std::vector<GameObject*> objects;
-	std::vector<GameObject*> grid[COLUMNS][ROWS];*/
-	std::vector<std::shared_ptr<GameObject>> objects;
-	std::vector<std::shared_ptr<GameObject>> grid[COLUMNS][ROWS];
-
+	std::vector<GameObject*> objects;
+	std::vector<GameObject*> grid[COLUMNS][ROWS];
 	Lazer lazer;
-	//std::vector<Lazer> lazers;
-	//std::vector<Asteroid> asteroids;
 	Ship ship;
 	
 	sf::Font fontHNMed;
@@ -70,8 +65,9 @@ public:
 	void astSpawn (); // Spawn Asteroids
 	bool CircleTest (sf::CircleShape Object1, sf::CircleShape Object2); // Cheeck collisions for colliders
 	sf::Vector2i getBucket (sf::Vector2f pos);
-	void bucket_add (sf::Vector2i b, std::shared_ptr<GameObject> obj);
-	void bucket_remove (sf::Vector2i b, std::shared_ptr<GameObject> obj);
-	void detect_collisions (std::shared_ptr<GameObject> obj, sf::Vector2i b);
+	void bucket_add (sf::Vector2i b, GameObject* obj);
+	void bucket_remove (sf::Vector2i b, GameObject* obj);
+	void detect_collisions (GameObject* obj, sf::Vector2i b);
 	int count_objects (std::string type);
+	void check_delete_flag ();
 };

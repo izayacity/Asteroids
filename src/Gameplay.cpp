@@ -69,9 +69,7 @@ int Gameplay::init () {
 			}
 
 			if (sf::Keyboard::isKeyPressed (sf::Keyboard::Space) && count_objects ("lazer") <= 10) {
-				//lazers.push_back (Lazer ());
-
-				std::shared_ptr<Lazer> lz_ptr (new Lazer());
+				Lazer* lz_ptr (new Lazer());
 				objects.push_back (lz_ptr);
 
 				if (lz_ptr == nullptr) {
@@ -112,23 +110,11 @@ void Gameplay::renderFrame () {
 	window.draw (ship.sprite);
 
 	if (gameState == MODE1) {
-		int i = 0;
-		// Todo
-		//for (std::vector<Lazer>::iterator it = lazers.begin (); it != lazers.end (); ++it) {
-		//	it->rect.move (sin (it->rect.getRotation () / 360 * 2 * pi) * it->velocity, -cos (it->rect.getRotation () / 360 * 2 * pi) * it->velocity);
-		//	window.draw (it->rect);
-		//}
-		//for (std::vector<Asteroid>::iterator it = asteroids.begin (); it != asteroids.end (); ++it) {
-		//	it->sprite.move (sin (it->sprite.getRotation () / 360 * 2 * pi) * it->velocity, -cos (it->sprite.getRotation () / 360 * 2 * pi) * it->velocity);
-		//	window.draw (it->sprite);
-		//}
-
-		for (std::vector<std::shared_ptr<GameObject>>::iterator it = objects.begin (); it != objects.end (); ) {
+		for (std::vector<GameObject*>::iterator it = objects.begin (); it != objects.end (); ) {
 			if (((*it)->getCenter ().x < 0 ||
 				(*it)->getCenter ().x > gameWidth || (*it)->getCenter ().y < 0 || (*it)->getCenter ().y > gameHeight)) {
-				std::cout << "Out of bound" << std::endl;
+				//std::cout << "Out of bound" << std::endl;
 				it = objects.erase (it);
-				continue;
 			} else {
 				(*it)->draw (window);
 				++it;
@@ -182,7 +168,7 @@ int Gameplay::selectMode (sf::RenderWindow& window) {
 // Return the number of objects with certain game object type
 int Gameplay::count_objects (std::string type) {
 	int count = 0;
-	for (std::vector<std::shared_ptr<GameObject>>::iterator it = objects.begin (); it != objects.end (); ++it) {
+	for (std::vector<GameObject*>::iterator it = objects.begin (); it != objects.end (); ++it) {
 		if ((*it)->getTag() == type) {
 			count++;
 		}
@@ -230,34 +216,105 @@ void Gameplay::update_state () {
 	if (sf::Keyboard::isKeyPressed (sf::Keyboard::Right)) {
 		ship.sprite.rotate (ship.angular_velocity * deltaTime);
 	}
-	
-	//// Erase lasers when they fly out of the screen
-	//if (!lazers.empty () && (lazers.front ().rect.getPosition ().x < 0 ||
-	//	lazers.front ().rect.getPosition ().x > gameWidth ||
-	//	lazers.front ().rect.getPosition ().y < 0 ||
-	//	lazers.front ().rect.getPosition ().y > gameHeight)) {
-	//	lazers.erase(lazers.begin());
-	//}
 
-	//// Erase asteroids when they fly out of the screen
-	//if (!asteroids.empty () && (asteroids.front ().sprite.getPosition ().x < 0 ||
-	//	asteroids.front ().sprite.getPosition ().x > gameWidth ||
-	//	asteroids.front ().sprite.getPosition ().y < 0 ||
-	//	asteroids.front ().sprite.getPosition ().y > gameHeight)) {
-	//	asteroids.erase (asteroids.begin ());
-	//}
-
+	check_delete_flag ();
 	// Bucket Grid
-	for (int i = 0; i < objects.size (); ++i) {
-		std::shared_ptr<GameObject> obj = objects[i];
+	for (unsigned int i = 0; i < objects.size (); ++i) {
+		GameObject* obj = objects[i];
 		sf::Vector2i curBucket = getBucket (obj->getCenter ());
 		obj->update ();    // Move obj, but don't check for collisions
 		sf::Vector2i newBucket = getBucket (obj->getCenter ());
-		/*if (curBucket != newBucket) {
+		if (curBucket != newBucket) {
 			bucket_remove (curBucket, obj);
 			bucket_add (newBucket, obj);
 		}
-		detect_collisions (obj, newBucket);*/
+		if (obj->getTag () == "asteroid") {
+			detect_collisions (obj, newBucket);
+		}
+	}
+}
+
+// delete_flag == 1: delete it;
+// delete_flag == 2: make it into two small objects;
+// delete_flag == 3: make it into two medium objects;
+void Gameplay::check_delete_flag () {
+	for (std::vector<GameObject*>::iterator it = objects.begin (); it != objects.end ();) {
+		if ((*it)->delete_flag == 1) {
+			// delete it;
+			it = objects.erase (it);
+		} else if ((*it)->delete_flag == 2) {
+			// make it into two small objects;
+			it = objects.erase (it);			
+			Asteroid* ast1 = new Asteroid ();
+			Asteroid* ast2 = new Asteroid ();
+			ast1->small (&smallTexture);
+			ast2->small (&smallTexture);
+			sf::Vector2f center = (*it)->getCenter ();
+			float rotation1, rotation2, rotation = (*it)->getRotation ();
+			if ((*it)->getRotation () < 90.f) {
+				rotation1 = rotation + 90.f;
+				rotation2 = rotation + 270.f;
+			} else if ((*it)->getRotation () > 270.f) {
+				rotation1 = rotation - 90.f;
+				rotation2 = rotation - 270.f;
+			} else {
+				rotation1 = rotation - 90.f;
+				rotation2 = rotation - 90.f;
+			}
+			ast1->sprite.setOrigin (center);
+			ast1->sprite.setPosition (center);
+			ast1->sprite.setRotation (rotation1);
+			ast2->sprite.setOrigin (center);
+			ast2->sprite.setPosition (center);
+			ast2->sprite.setRotation (rotation2);
+			objects.push_back (ast1);
+			objects.push_back (ast2);
+			std::cout << "11" << std::endl;
+		} else if ((*it)->delete_flag == 3) {
+			// make it into two medium objects;
+			it = objects.erase (it);
+
+			Asteroid* ast1 = new Asteroid ();
+			Asteroid* ast2 = new Asteroid ();
+			ast1->medium (&mediumTexture);
+			ast2->medium (&mediumTexture);
+			sf::Vector2f center = (*it)->getCenter ();
+			float rotation = (*it)->getRotation ();
+			ast1->sprite.setOrigin (center);
+			ast1->sprite.setPosition (center);
+			ast1->sprite.setRotation (rotation);
+			ast2->sprite.setOrigin (center);
+			ast2->sprite.setPosition (center);
+			ast2->sprite.setRotation (-rotation);
+			objects.push_back (ast1);
+			objects.push_back (ast2);
+			std::cout << "22" << std::endl;
+		} else {
+			it++;
+		}
+	}
+}
+
+// Detect collisions against objects in the new bucket
+// obj is asteroid
+void Gameplay::detect_collisions (GameObject* obj, sf::Vector2i b) {
+	int left = std::max (b.x - 1, 0);
+	int right = std::min (b.x + 1, COLUMNS - 1);
+	int top = std::max (b.y - 1, 0);
+	int bot = std::min (b.y + 1, ROWS - 1);
+
+	// Check the collisions between 4 buckets around
+	for (int bx = left; bx <= right; ++bx) {
+		for (int by = top; by <= bot; ++by) {
+			std::vector<GameObject*> & v = grid[bx][by];
+			for (GameObject* o : v) {
+				if (o != obj) {
+					if (obj->checkCollisionWith (o) == -1) {
+						gameState = P1LOST;
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -277,39 +334,20 @@ sf::Vector2i Gameplay::getBucket (sf::Vector2f pos) {
 }
 
 // Add obj to the new bucket
-void Gameplay::bucket_add (sf::Vector2i b, std::shared_ptr<GameObject> obj) {
-	std::vector<std::shared_ptr<GameObject>> & v = grid[b.x][b.y];
+void Gameplay::bucket_add (sf::Vector2i b, GameObject* obj) {
+	std::vector<GameObject*> & v = grid[b.x][b.y];
 	v.push_back (obj);
 }
 
 // If bucket has changed, remove obj from the current bucket
-void Gameplay::bucket_remove (sf::Vector2i b, std::shared_ptr<GameObject> obj) {
-	std::vector<std::shared_ptr<GameObject>> & v = grid[b.x][b.y];
+void Gameplay::bucket_remove (sf::Vector2i b, GameObject* obj) {
+	std::vector<GameObject*> & v = grid[b.x][b.y];
 	auto i = std::find (v.begin (), v.end (), obj);
 	if (i != v.end ()) {
-		std::cout << "Successfully delete object i" << std::endl;
+		std::cout << "Successfully delete object " << i - v.begin() << std::endl;
 		v.erase (i);
 	} else {
 		std::cout << "Could not find the object in bucket_move" << std::endl;
-	}
-}
-
-// Detect collisions against objects in the new bucket
-void Gameplay::detect_collisions (std::shared_ptr<GameObject> obj, sf::Vector2i b) {
-	int left = std::max (b.x - 1, 0);
-	int right = std::min (b.x + 1, COLUMNS - 1);
-	int top = std::max (b.y - 1, 0);
-	int bot = std::min (b.y + 1, ROWS - 1);
-
-	// Check the collisions between 4 buckets around
-	for (int bx = left; bx <= right; ++bx) {
-		for (int by = top; by <= bot; ++by) {
-			std::vector<std::shared_ptr<GameObject>> & v = grid[bx][by];
-			for (std::shared_ptr<GameObject> o : v) {
-				if (o != obj)
-					obj->checkCollisionWith (o);
-			}
-		}
 	}
 }
 
@@ -352,9 +390,7 @@ void Gameplay::astSpawn () {
 		angle = 360.f - atan ((pos_x - gameWidth / 2) / (gameHeight / 2)) / pi * 180.f;
 	}
 
-	// asteroids.push_back (Asteroid());
-	// Push the asteroids into vector objects
-	std::shared_ptr<Asteroid> ast_ptr (new Asteroid ());
+	Asteroid* ast_ptr (new Asteroid ());
 	if (ast_ptr == nullptr) {
 		std::cout << "Failed to make ast_ptr" << std::endl;
 		return;

@@ -14,6 +14,7 @@ public:
 	const float pi = 3.14159f;
 
 	Lazer () : velocity (9.f) {
+		delete_flag = 0;
 		rect.setFillColor (sf::Color::Green);
 		rect.setSize (sf::Vector2f(2.f, 10.f));
 		origin = rect.getOrigin ();
@@ -29,12 +30,20 @@ public:
 		window.draw (rect);
 	}
 
-	virtual void checkCollisionWith (std::shared_ptr<GameObject> obj) {
-
+	virtual int checkCollisionWith (GameObject* obj) {
+		return 0;
 	}
 
 	virtual sf::Vector2f getCenter () {
 		return rect.getPosition ();
+	}
+
+	virtual float getRotation () {
+		return rect.getRotation ();
+	}
+
+	virtual void setRotation (float new_rotation) {
+		rect.setRotation (new_rotation);
 	}
 
 	virtual int getRenderBucket () {
@@ -45,8 +54,7 @@ public:
 		return "lazer";
 	}
 
-	bool CircleTest (sf::CircleShape Object1, sf::CircleShape Object2) {
-		sf::Vector2f Distance = Object1.getOrigin () - Object2.getOrigin ();
-		return (Distance.x * Distance.x + Distance.y * Distance.y <= (Object1.getRadius () + Object2.getRadius ()) * (Object1.getRadius () + Object2.getRadius ()));
+	virtual float getRadius () {
+		return collider.getRadius ();
 	}
 };

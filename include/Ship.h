@@ -18,14 +18,16 @@ public:
 	sf::Vector2f origin;
 	
 	Ship::Ship () : acceleration(125.f), angular_velocity(150.f) {
+		delete_flag = 0;
 		sprite.setPosition (sf::Vector2f (400.f, 300.f));
 		assert (shipTexture1.loadFromFile ("resources/ship1.png"));
 		sprite.setTexture (shipTexture1);
 		sprite.setScale (sf::Vector2f (0.05f, 0.05f)); // absolute scale factor
 		origin = sf::Vector2f (sprite.getTexture ()->getSize ().x * 1.f / 2, 0.f);
 		sprite.setOrigin (origin);
-		collider.setOrigin (origin);
-		collider.setRadius ((sprite.getTexture ()->getSize ().x * 1.f + sprite.getTexture ()->getSize ().y * 1.f) / 2);
+		collider.setOrigin (origin.x, sprite.getTexture ()->getSize ().y * 1.f / 2);
+		//collider.setRadius ((sprite.getTexture ()->getSize ().x * 1.f + sprite.getTexture ()->getSize ().y * 1.f) / 2);
+		collider.setRadius ((sprite.getTexture ()->getSize ().x * 0.05f + sprite.getTexture ()->getSize ().y * 0.05f) / 2);
 	}
 
 	Ship::~Ship () {
@@ -39,12 +41,20 @@ public:
 		window.draw (sprite);
 	}
 
-	virtual void checkCollisionWith (std::shared_ptr<GameObject> obj) {
-		
+	virtual int checkCollisionWith (GameObject* obj) {
+		return 0;
 	}
 
 	virtual sf::Vector2f getCenter () {
 		return sprite.getPosition();
+	}
+
+	virtual float getRotation () {
+		return sprite.getRotation ();
+	}
+
+	virtual void setRotation (float new_rotation) {
+		sprite.setRotation (new_rotation);
 	}
 
 	virtual int getRenderBucket () {
@@ -55,8 +65,7 @@ public:
 		return "ship";
 	}
 
-	bool CircleTest (sf::CircleShape Object1, sf::CircleShape Object2) {
-		sf::Vector2f Distance = Object1.getOrigin () - Object2.getOrigin ();
-		return (Distance.x * Distance.x + Distance.y * Distance.y <= (Object1.getRadius () + Object2.getRadius ()) * (Object1.getRadius () + Object2.getRadius ()));
+	virtual float getRadius () {
+		return collider.getRadius ();
 	}
 };
