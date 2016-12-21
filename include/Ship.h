@@ -26,8 +26,7 @@ public:
 		origin = sf::Vector2f (sprite.getTexture ()->getSize ().x * 1.f / 2, 0.f);
 		sprite.setOrigin (origin);
 		collider.setOrigin (origin.x, sprite.getTexture ()->getSize ().y * 1.f / 2);
-		//collider.setRadius ((sprite.getTexture ()->getSize ().x * 1.f + sprite.getTexture ()->getSize ().y * 1.f) / 2);
-		collider.setRadius ((sprite.getTexture ()->getSize ().x * 0.05f + sprite.getTexture ()->getSize ().y * 0.05f) / 2);
+		collider.setRadius ((sprite.getTexture ()->getSize ().x * 0.05f / 4 + sprite.getTexture ()->getSize ().y * 0.05f / 4) / 2);
 	}
 
 	Ship::~Ship () {

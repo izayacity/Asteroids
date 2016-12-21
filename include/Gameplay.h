@@ -63,11 +63,9 @@ public:
 	void update_state ();
 	void renderFrame (); // Draw game objects
 	void astSpawn (); // Spawn Asteroids
-	bool CircleTest (sf::CircleShape Object1, sf::CircleShape Object2); // Cheeck collisions for colliders
 	sf::Vector2i getBucket (sf::Vector2f pos);
 	void bucket_add (sf::Vector2i b, GameObject* obj);
 	void bucket_remove (sf::Vector2i b, GameObject* obj);
 	void detect_collisions (GameObject* obj, sf::Vector2i b);
 	int count_objects (std::string type);
-	void check_delete_flag ();
 };

@@ -26,8 +26,7 @@ public:
 		origin = sf::Vector2f (sprite.getTexture ()->getSize ().x * 1.f / 2, sprite.getTexture ()->getSize ().y * 1.f / 2);
 		sprite.setOrigin (origin);
 		collider.setOrigin (origin);
-		//collider.setRadius ((sprite.getTexture ()->getSize ().x * 1.f + sprite.getTexture ()->getSize ().y * 1.f) / 2);
-		collider.setRadius ((sprite.getTexture ()->getSize ().x * 0.15f + sprite.getTexture ()->getSize ().y * 0.15f) / 2);
+		collider.setRadius ((sprite.getTexture ()->getSize ().x * 0.15f / 4 + sprite.getTexture ()->getSize ().y * 0.15f / 4) / 2);
 	}
 
 	void medium (sf::Texture *astTexture) {
@@ -37,8 +36,7 @@ public:
 		origin = sf::Vector2f (sprite.getTexture ()->getSize ().x * 1.f / 2, sprite.getTexture ()->getSize ().y * 1.f / 2);
 		sprite.setOrigin (origin);
 		collider.setOrigin (origin);
-		//collider.setRadius ((sprite.getTexture ()->getSize ().x * 1.f + sprite.getTexture ()->getSize ().y * 1.f) / 2);
-		collider.setRadius ((sprite.getTexture ()->getSize ().x * 0.25f + sprite.getTexture ()->getSize ().y * 0.25f) / 2);
+		collider.setRadius ((sprite.getTexture ()->getSize ().x * 0.25f / 4 + sprite.getTexture ()->getSize ().y * 0.25f / 4) / 2);
 	}
 
 	void large (sf::Texture *astTexture) {
@@ -48,8 +46,7 @@ public:
 		origin = sf::Vector2f (sprite.getTexture ()->getSize ().x * 1.f / 2, sprite.getTexture ()->getSize ().y * 1.f / 2);
 		sprite.setOrigin (origin);
 		collider.setOrigin (origin);
-		//collider.setRadius ((sprite.getTexture ()->getSize ().x * 1.f + sprite.getTexture ()->getSize ().y * 1.f) / 2);
-		collider.setRadius ((sprite.getTexture ()->getSize ().x * 0.4f + sprite.getTexture ()->getSize ().y * 0.4f) / 2);
+		collider.setRadius ((sprite.getTexture ()->getSize ().x * 0.4f / 4 + sprite.getTexture ()->getSize ().y * 0.4f / 4) / 2);
 	}
 
 	virtual void update () {
@@ -64,19 +61,16 @@ public:
 		sf::Vector2f Distance = getCenter () - o2->getCenter ();
 
 		if (Distance.x * Distance.x + Distance.y * Distance.y <= (getRadius () + o2->getRadius ()) * (getRadius () + o2->getRadius ())) {
-			delete_flag = 1;
 			std::string o2_type = o2->getTag ();
 
 			if (o2_type.compare ("asteroid") == 0) {				
-				//std::cout << "Collision between asteroids detected" << std::endl;
-				// bound off
-				float rotation1 = (sprite.getRotation () > 180.f) ? sprite.getRotation () - 180.f : sprite.getRotation () + 180.f;
+				// bounce off
+				float rotation1 = (getRotation () > 180.f) ? getRotation () - 180.f : getRotation () + 180.f;
 				float rotation2 = (o2->getRotation () > 180.f) ? o2->getRotation () - 180.f : o2->getRotation () + 180.f;
-				//std::cout << rotation1 << ", " << rotation2 << std::endl;
-
-				sprite.setRotation (rotation1);
+				setRotation (rotation1);
 				o2->setRotation (rotation2);
 			} else if (o2_type.compare ("ship") == 0) {
+				delete_flag = 1;
 				std::cout << "Ship is hit!" << std::endl;
 				return -1;
 			} else if (o2_type.compare ("lazer") == 0) {
@@ -84,12 +78,15 @@ public:
 				// small asteroid
 				if (type == 0) {
 					delete_flag = 1;
+					o2->delete_flag = 1;
 				} else if (type == 1) {
 					// medium asteroid, delete_flag 2 add two small asteroids to the vector
-					delete_flag = 2;					
+					delete_flag = 2;
+					o2->delete_flag = 1;
 				} else if (type == 2) {
 					// large asteroid, delete_flag 3 add two medium asteroids to the vector
 					delete_flag = 3;
+					o2->delete_flag = 1;
 				}
 			}
 		}

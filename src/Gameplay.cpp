@@ -111,16 +111,74 @@ void Gameplay::renderFrame () {
 
 	if (gameState == MODE1) {
 		for (std::vector<GameObject*>::iterator it = objects.begin (); it != objects.end (); ) {
-			if (((*it)->getCenter ().x < 0 ||
-				(*it)->getCenter ().x > gameWidth || (*it)->getCenter ().y < 0 || (*it)->getCenter ().y > gameHeight)) {
-				//std::cout << "Out of bound" << std::endl;
+			if ((*it)->delete_flag == 1 || (*it)->getCenter ().x < 0 ||
+				(*it)->getCenter ().x > gameWidth || (*it)->getCenter ().y < 0 || (*it)->getCenter ().y > gameHeight) {
 				it = objects.erase (it);
+				std::cout << "0000000000000000" << std::endl;
+			} else if ((*it)->delete_flag == 2) {
+				sf::Vector2f center = (*it)->getCenter ();
+				float rotation1, rotation2, rotation = (*it)->getRotation ();
+				// make it into two small objects;
+				it = objects.erase (it);
+				Asteroid* ast1 = new Asteroid ();
+				Asteroid* ast2 = new Asteroid ();
+				ast1->small (&smallTexture);
+				ast2->small (&smallTexture);
+
+				if (rotation < 90.f) {
+					rotation1 = rotation + 90.f;
+					rotation2 = rotation + 270.f;
+				} else if (rotation > 270.f) {
+					rotation1 = rotation - 90.f;
+					rotation2 = rotation - 270.f;
+				} else {
+					rotation1 = rotation - 90.f;
+					rotation2 = rotation - 90.f;
+				}
+				ast1->sprite.setOrigin (center);
+				ast1->sprite.setPosition (center);
+				ast1->sprite.setRotation (rotation1);
+				ast2->sprite.setOrigin (center);
+				ast2->sprite.setPosition (center);
+				ast2->sprite.setRotation (rotation2);
+				objects.push_back (ast1);
+				objects.push_back (ast2);
+				std::cout << "11" << std::endl;
+			} else if ((*it)->delete_flag == 3) {
+				sf::Vector2f center = (*it)->getCenter ();
+				float rotation1, rotation2, rotation = (*it)->getRotation ();
+				// make it into two medium objects;
+				it = objects.erase (it);
+
+				Asteroid* ast1 = new Asteroid ();
+				Asteroid* ast2 = new Asteroid ();
+				ast1->medium (&mediumTexture);
+				ast2->medium (&mediumTexture);
+
+				if (rotation < 90.f) {
+					rotation1 = rotation + 90.f;
+					rotation2 = rotation + 270.f;
+				} else if (rotation > 270.f) {
+					rotation1 = rotation - 90.f;
+					rotation2 = rotation - 270.f;
+				} else {
+					rotation1 = rotation - 90.f;
+					rotation2 = rotation - 90.f;
+				}
+				ast1->sprite.setOrigin (center);
+				ast1->sprite.setPosition (center);
+				ast1->sprite.setRotation (rotation);
+				ast2->sprite.setOrigin (center);
+				ast2->sprite.setPosition (center);
+				ast2->sprite.setRotation (-rotation);
+				objects.push_back (ast1);
+				objects.push_back (ast2);
+				std::cout << "22" << std::endl;
 			} else {
 				(*it)->draw (window);
 				++it;
 			}
 		}
-
 	} else if (gameState == P1LOST) {
 		window.draw (lostText);
 	}
@@ -217,7 +275,6 @@ void Gameplay::update_state () {
 		ship.sprite.rotate (ship.angular_velocity * deltaTime);
 	}
 
-	check_delete_flag ();
 	// Bucket Grid
 	for (unsigned int i = 0; i < objects.size (); ++i) {
 		GameObject* obj = objects[i];
@@ -230,67 +287,6 @@ void Gameplay::update_state () {
 		}
 		if (obj->getTag () == "asteroid") {
 			detect_collisions (obj, newBucket);
-		}
-	}
-}
-
-// delete_flag == 1: delete it;
-// delete_flag == 2: make it into two small objects;
-// delete_flag == 3: make it into two medium objects;
-void Gameplay::check_delete_flag () {
-	for (std::vector<GameObject*>::iterator it = objects.begin (); it != objects.end ();) {
-		if ((*it)->delete_flag == 1) {
-			// delete it;
-			it = objects.erase (it);
-		} else if ((*it)->delete_flag == 2) {
-			// make it into two small objects;
-			it = objects.erase (it);			
-			Asteroid* ast1 = new Asteroid ();
-			Asteroid* ast2 = new Asteroid ();
-			ast1->small (&smallTexture);
-			ast2->small (&smallTexture);
-			sf::Vector2f center = (*it)->getCenter ();
-			float rotation1, rotation2, rotation = (*it)->getRotation ();
-			if ((*it)->getRotation () < 90.f) {
-				rotation1 = rotation + 90.f;
-				rotation2 = rotation + 270.f;
-			} else if ((*it)->getRotation () > 270.f) {
-				rotation1 = rotation - 90.f;
-				rotation2 = rotation - 270.f;
-			} else {
-				rotation1 = rotation - 90.f;
-				rotation2 = rotation - 90.f;
-			}
-			ast1->sprite.setOrigin (center);
-			ast1->sprite.setPosition (center);
-			ast1->sprite.setRotation (rotation1);
-			ast2->sprite.setOrigin (center);
-			ast2->sprite.setPosition (center);
-			ast2->sprite.setRotation (rotation2);
-			objects.push_back (ast1);
-			objects.push_back (ast2);
-			std::cout << "11" << std::endl;
-		} else if ((*it)->delete_flag == 3) {
-			// make it into two medium objects;
-			it = objects.erase (it);
-
-			Asteroid* ast1 = new Asteroid ();
-			Asteroid* ast2 = new Asteroid ();
-			ast1->medium (&mediumTexture);
-			ast2->medium (&mediumTexture);
-			sf::Vector2f center = (*it)->getCenter ();
-			float rotation = (*it)->getRotation ();
-			ast1->sprite.setOrigin (center);
-			ast1->sprite.setPosition (center);
-			ast1->sprite.setRotation (rotation);
-			ast2->sprite.setOrigin (center);
-			ast2->sprite.setPosition (center);
-			ast2->sprite.setRotation (-rotation);
-			objects.push_back (ast1);
-			objects.push_back (ast2);
-			std::cout << "22" << std::endl;
-		} else {
-			it++;
 		}
 	}
 }
@@ -343,12 +339,15 @@ void Gameplay::bucket_add (sf::Vector2i b, GameObject* obj) {
 void Gameplay::bucket_remove (sf::Vector2i b, GameObject* obj) {
 	std::vector<GameObject*> & v = grid[b.x][b.y];
 	auto i = std::find (v.begin (), v.end (), obj);
+	auto i2 = std::find (objects.begin (), objects.end (), obj);
 	if (i != v.end ()) {
-		std::cout << "Successfully delete object " << i - v.begin() << std::endl;
+		//std::cout << "Successfully delete object " << i2 - objects.begin() << std::endl;
+		//std::cout << "Vecter objects size =  " << objects.size () << std::endl;
 		v.erase (i);
-	} else {
-		std::cout << "Could not find the object in bucket_move" << std::endl;
 	}
+	/*else {
+		std::cout << "Could not find the object in bucket_move" << std::endl;
+	}*/
 }
 
 void Gameplay::astSpawn () {
@@ -358,35 +357,35 @@ void Gameplay::astSpawn () {
 	angle = rand () % 360 + 0.f;
 	if (angle >= 0 && angle < 45) {
 		pos_x = rand () % (gameWidth / 2) + 0.f;
-		pos_y = gameHeight + 0.f;
+		pos_y = gameHeight - 0.1f;
 		angle = atan ((gameWidth / 2 - pos_x) / (gameHeight / 2)) / pi * 180.f;
 	} else if (angle >= 45 && angle < 90) {
-		pos_x = 0.f;
+		pos_x = 0.1f;
 		pos_y = rand () % (gameHeight / 2) + gameHeight / 2.f;
 		angle = atan ((gameWidth / 2) / (pos_y - gameHeight / 2)) / pi * 180.f;
 	} else if (angle >= 90 && angle < 135) {
-		pos_x = 0.f;
+		pos_x = 0.1f;
 		pos_y = rand () % (gameHeight / 2) + 0.f;
 		angle = 180.f - atan ((gameWidth / 2) / (gameHeight / 2 - pos_y)) / pi * 180.f;
 	} else if (angle >= 135 && angle < 180) {
 		pos_x = rand () % (gameWidth / 2) + 0.f;
-		pos_y = 0.f;
+		pos_y = 0.1f;
 		angle = 180.f - atan ((gameWidth / 2 - pos_x) / (gameHeight / 2)) / pi * 180.f;
 	} else if (angle >= 180 && angle < 225) {
 		pos_x = rand () % (gameWidth / 2) + gameWidth / 2.f;
-		pos_y = 0.f;
+		pos_y = 0.1f;
 		angle = atan ((pos_x - gameWidth / 2) / (gameHeight / 2)) / pi * 180.f + 180.f;
 	} else if (angle >= 225 && angle < 270) {
-		pos_x = gameWidth + 0.f;
+		pos_x = gameWidth - 0.1f;
 		pos_y = rand () % (gameHeight / 2) + 0.f;
 		angle = atan ((gameWidth / 2) / (gameHeight / 2 - pos_y)) / pi * 180.f + 180.f;
 	} else if (angle >= 270 && angle < 315) {
-		pos_x = gameWidth + 0.f;
+		pos_x = gameWidth - 0.1f;
 		pos_y = rand () % (gameHeight / 2) + gameHeight / 2.f;
 		angle = 360.f - atan ((gameWidth / 2) / (pos_y - gameHeight / 2)) / pi * 180.f;
 	} else if (angle >= 315 && angle < 360) {
 		pos_x = rand () % (gameWidth / 2) + gameWidth / 2.f;
-		pos_y = gameHeight + 0.f;
+		pos_y = gameHeight - 0.1f;
 		angle = 360.f - atan ((pos_x - gameWidth / 2) / (gameHeight / 2)) / pi * 180.f;
 	}
 
@@ -409,9 +408,4 @@ void Gameplay::astSpawn () {
 	// Set the position and rotation of the new asteroid
 	ast_ptr->sprite.setRotation (angle);
 	ast_ptr->sprite.setPosition (pos_x, pos_y);
-}
-
-bool Gameplay::CircleTest (sf::CircleShape Object1, sf::CircleShape Object2) {
-	sf::Vector2f Distance = Object1.getOrigin () - Object2.getOrigin ();
-	return (Distance.x * Distance.x + Distance.y * Distance.y <= (Object1.getRadius() + Object2.getRadius ()) * (Object1.getRadius () + Object2.getRadius ()));
 }
