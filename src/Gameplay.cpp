@@ -78,8 +78,8 @@ int Gameplay::init () {
 				}
 
 				if (shotClock.getElapsedTime().asSeconds() >= 0.25f) {
-					lz_ptr->rect.setRotation (ship.sprite.getRotation ());
-					lz_ptr->rect.setPosition (ship.sprite.getPosition ());
+					lz_ptr->sprite.setRotation (ship.sprite.getRotation ());
+					lz_ptr->sprite.setPosition (ship.sprite.getPosition ());
 				}
 				shotClock.restart ();
 			}
@@ -101,7 +101,8 @@ int Gameplay::init () {
 void Gameplay::renderFrame () {
 	// Lost text
 	sf::Text lostText ("You lost!\nPress esc to menu.", fontHNM, 40);
-	lostText.setPosition (gameWidth / 2 - lostText.getGlobalBounds ().width / 2, gameHeight / 2 - lostText.getGlobalBounds ().height / 2);
+	lostText.setPosition (gameWidth / 2 - lostText.getGlobalBounds ().width / 2,
+		gameHeight / 2 - lostText.getGlobalBounds ().height / 2);
 	lostText.setFillColor (sf::Color::White);
 
 	window.clear ();
@@ -112,7 +113,11 @@ void Gameplay::renderFrame () {
 	if (gameState == MODE1) {
 		for (std::vector<GameObject*>::iterator it = objects.begin (); it != objects.end (); ) {
 			if ((*it)->delete_flag == 1 || (*it)->getCenter ().x < 0 ||
-				(*it)->getCenter ().x > gameWidth || (*it)->getCenter ().y < 0 || (*it)->getCenter ().y > gameHeight) {
+				(*it)->getCenter ().x > gameWidth || (*it)->getCenter ().y < 0 ||
+				(*it)->getCenter ().y > gameHeight) {
+				// remove from vector objects and bucket vector grid
+				sf::Vector2i current_bucket = getBucket ((*it)->getCenter());
+				bucket_remove (current_bucket, (*it));
 				it = objects.erase (it);
 				std::cout << "0000000000000000" << std::endl;
 			} else if ((*it)->delete_flag == 2) {
@@ -122,8 +127,8 @@ void Gameplay::renderFrame () {
 				it = objects.erase (it);
 				Asteroid* ast1 = new Asteroid ();
 				Asteroid* ast2 = new Asteroid ();
-				ast1->small (&smallTexture);
-				ast2->small (&smallTexture);
+				ast1->small (smallTexture);
+				ast2->small (smallTexture);
 
 				if (rotation < 90.f) {
 					rotation1 = rotation + 90.f;
@@ -152,8 +157,8 @@ void Gameplay::renderFrame () {
 
 				Asteroid* ast1 = new Asteroid ();
 				Asteroid* ast2 = new Asteroid ();
-				ast1->medium (&mediumTexture);
-				ast2->medium (&mediumTexture);
+				ast1->medium (mediumTexture);
+				ast2->medium (mediumTexture);
 
 				if (rotation < 90.f) {
 					rotation1 = rotation + 90.f;
@@ -189,7 +194,8 @@ int Gameplay::selectMode (sf::RenderWindow& window) {
 
 	// Welcome text
 	sf::Text welcome[3];
-	std::string msg[3] = { "Press 1 - You VS Ai", "Space to shoot, Arrow keys to control", "Press Esc to exit." };
+	std::string msg[3] = { "Press 1 - You VS Ai", "Space to shoot, Arrow keys to control",
+		"Press Esc to exit." };
 	for (int i = 0; i < 3; i++) {
 		welcome[i].setPosition (50.0f, 50.0f * (i + 1));
 		welcome[i].setFillColor (sf::Color (239, 187, 56));
@@ -202,7 +208,8 @@ int Gameplay::selectMode (sf::RenderWindow& window) {
 	while (true) {
 		sf::Event event;
 		while (window.pollEvent (event)) {
-			if (event.type == sf::Event::Closed || event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
+			if (event.type == sf::Event::Closed || event.type == sf::Event::KeyPressed
+				&& event.key.code == sf::Keyboard::Escape) {
 				window.close ();
 				return -1;
 			}
@@ -236,7 +243,7 @@ int Gameplay::count_objects (std::string type) {
 
 void Gameplay::update_state () {
 	astTime = astClock.getElapsedTime().asSeconds();
-	if (astTime >= 1) {
+	if (astTime >= 0.5f) {
 		astSpawn ();
 		astClock.restart ();
 	}
@@ -244,9 +251,11 @@ void Gameplay::update_state () {
 	if (ship.velocity > 0.f) {
 		ship.velocity -= deltaTime;
 		if (isUp == 1) {
-			ship.sprite.move (sin (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity, -cos (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity);
+			ship.sprite.move (sin (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity,
+				-cos (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity);
 		} else if (isUp == -1) {
-			ship.sprite.move (-sin (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity, cos (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity);
+			ship.sprite.move (-sin (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity,
+				cos (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity);
 		}
 	} else if (ship.velocity < 0.f) {
 		ship.velocity = 0.f;
@@ -257,14 +266,16 @@ void Gameplay::update_state () {
 	if (sf::Keyboard::isKeyPressed (sf::Keyboard::Up)) {
 		isUp = 1;
 		ship.velocity = ship.acceleration * deltaTime;
-		ship.sprite.move (sin (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity, -cos (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity);
+		ship.sprite.move (sin (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity,
+			-cos (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity);
 	}
 
 	if (sf::Keyboard::isKeyPressed (sf::Keyboard::Down)) {
 		thrust_sound.play ();
 		isUp = -1;
 		ship.velocity = ship.acceleration * deltaTime;
-		ship.sprite.move (-sin (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity, cos (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity);		
+		ship.sprite.move (-sin (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity,
+			cos (ship.sprite.getRotation () / 360 * 2 * pi) * ship.velocity);		
 	}
 
 	if (sf::Keyboard::isKeyPressed (sf::Keyboard::Left)) {
@@ -398,11 +409,11 @@ void Gameplay::astSpawn () {
 
 	// Init the new asteroid based on the random value of type
 	if (type == 0) {
-		ast_ptr->small (&smallTexture);
+		ast_ptr->small (smallTexture);
 	} else if (type == 1) {
-		ast_ptr->medium (&mediumTexture);
+		ast_ptr->medium (mediumTexture);
 	} else if (type == 2) {
-		ast_ptr->large (&largeTexture);
+		ast_ptr->large (largeTexture);
 	}
 
 	// Set the position and rotation of the new asteroid

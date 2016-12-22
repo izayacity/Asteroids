@@ -7,46 +7,37 @@
 #include "GameObject.h"
 
 class Asteroid : public GameObject {
-public:	
-	sf::Sprite sprite;
-	sf::CircleShape collider;
-	sf::Vector2f origin;
-	float velocity;
-	int type;
-	const float pi = 3.14159f;
-
-	Asteroid () : velocity (2.25f) {
+public:
+	Asteroid () {
+		velocity = 5.f;
 		delete_flag = 0;
 	}
 	
-	void small (sf::Texture *astTexture) {
+	void small (sf::Texture astTexture) {
 		type = 0;
-		sprite.setTexture (*astTexture);
-		sprite.setScale (sf::Vector2f (0.15f, 0.15f)); // absolute scale factor
-		origin = sf::Vector2f (sprite.getTexture ()->getSize ().x * 1.f / 2, sprite.getTexture ()->getSize ().y * 1.f / 2);
-		sprite.setOrigin (origin);
-		collider.setOrigin (origin);
-		collider.setRadius ((sprite.getTexture ()->getSize ().x * 0.15f / 4 + sprite.getTexture ()->getSize ().y * 0.15f / 4) / 2);
+		sprite.setRadius (20.f);
+		//sprite.setTexture (&astTexture);
+		sprite.setOrigin (20.f, 20.f);
+		//sprite.setScale (sf::Vector2f (0.15f, 0.15f)); // absolute scale factor
+		sprite.setFillColor (sf::Color::Yellow);
 	}
 
-	void medium (sf::Texture *astTexture) {
+	void medium (sf::Texture astTexture) {
 		type = 1;
-		sprite.setTexture (*astTexture);
-		sprite.setScale (sf::Vector2f (0.25f, 0.25f)); // absolute scale factor
-		origin = sf::Vector2f (sprite.getTexture ()->getSize ().x * 1.f / 2, sprite.getTexture ()->getSize ().y * 1.f / 2);
-		sprite.setOrigin (origin);
-		collider.setOrigin (origin);
-		collider.setRadius ((sprite.getTexture ()->getSize ().x * 0.25f / 4 + sprite.getTexture ()->getSize ().y * 0.25f / 4) / 2);
+		sprite.setRadius (35.f);
+		//sprite.setTexture (&astTexture);
+		sprite.setOrigin (35.f, 35.f);
+		//sprite.setScale (sf::Vector2f (0.25f, 0.25f)); // absolute scale factor
+		sprite.setFillColor (sf::Color::Yellow);
 	}
 
-	void large (sf::Texture *astTexture) {
+	void large (sf::Texture astTexture) {
 		type = 2;
-		sprite.setTexture (*astTexture);
-		sprite.setScale (sf::Vector2f (0.4f, 0.4f)); // absolute scale factor
-		origin = sf::Vector2f (sprite.getTexture ()->getSize ().x * 1.f / 2, sprite.getTexture ()->getSize ().y * 1.f / 2);
-		sprite.setOrigin (origin);
-		collider.setOrigin (origin);
-		collider.setRadius ((sprite.getTexture ()->getSize ().x * 0.4f / 4 + sprite.getTexture ()->getSize ().y * 0.4f / 4) / 2);
+		sprite.setRadius (50.f);
+		//sprite.setTexture (&astTexture);
+		sprite.setOrigin (50.f, 50.f);
+		//sprite.setScale (sf::Vector2f (0.4f, 0.4f)); // absolute scale factor
+		sprite.setFillColor (sf::Color::Yellow);
 	}
 
 	virtual void update () {
@@ -60,15 +51,16 @@ public:
 	virtual int checkCollisionWith (GameObject* o2) {	
 		sf::Vector2f Distance = getCenter () - o2->getCenter ();
 
-		if (Distance.x * Distance.x + Distance.y * Distance.y <= (getRadius () + o2->getRadius ()) * (getRadius () + o2->getRadius ())) {
+		if (Distance.x * Distance.x + Distance.y * Distance.y <=
+			(sprite.getRadius () + o2->sprite.getRadius ()) * (sprite.getRadius () + o2->sprite.getRadius ())) {
 			std::string o2_type = o2->getTag ();
 
 			if (o2_type.compare ("asteroid") == 0) {				
 				// bounce off
 				float rotation1 = (getRotation () > 180.f) ? getRotation () - 180.f : getRotation () + 180.f;
-				float rotation2 = (o2->getRotation () > 180.f) ? o2->getRotation () - 180.f : o2->getRotation () + 180.f;
+				//float rotation2 = (o2->getRotation () > 180.f) ? o2->getRotation () - 180.f : o2->getRotation () + 180.f;
 				setRotation (rotation1);
-				o2->setRotation (rotation2);
+				//o2->setRotation (rotation2);
 			} else if (o2_type.compare ("ship") == 0) {
 				delete_flag = 1;
 				std::cout << "Ship is hit!" << std::endl;
@@ -111,9 +103,5 @@ public:
 
 	virtual std::string getTag () {
 		return "asteroid";
-	}
-
-	virtual float getRadius () {
-		return collider.getRadius ();
 	}
 };
