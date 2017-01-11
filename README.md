@@ -1,1 +1,3 @@
 # Asteroids
+
+In Asteroids, the player controls a ship in outer space. The player's objective is to destroy all of the asteroids in the area by shooting at them with lasers/bullets. Destroying a large asteroid causes it to spit into two medium-sized asteroids, and destroying a medium asteroid causes it to split into two small asteroids. Once the area has been cleared of asteroids, the player moves to the next level where there are more asteroids. If the player's ship is hit by an asteroid, then the ship is destroyed and the player loses a "life". If the player loses three lives, it's "game over" and the player must restart from the beginning.
